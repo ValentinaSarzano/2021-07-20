@@ -5,11 +5,14 @@
 package it.polito.tdp.yelp;
 
 import java.net.URL;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.yelp.model.Intervistatore;
 import it.polito.tdp.yelp.model.Model;
 import it.polito.tdp.yelp.model.User;
+import it.polito.tdp.yelp.model.UserSimiliarita;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -56,63 +59,76 @@ public class FXMLController {
 
     @FXML
     void doCreaGrafo(ActionEvent event) {
-
     	txtResult.clear();
-    	String stringaDaConvertire = txtN.getText();
+    	int n = 0;
     	try {
-    		int minReview = Integer.parseInt(stringaDaConvertire);
-
-    		Integer anno = cmbAnno.getValue(); //lo salvo come oggetto Integer e non come int per poter fare il controllo dell'if sottostante, ovvero verificare che non sia null (non posso confrontare un int con null ma un oggetto si)
-    		if(anno == null) {
-    			txtResult.setText("Selezionare un anno!\n");
-    		    return;
-    		}
-    		String msg = this.model.creaGrafo(minReview, anno);
-    		txtResult.setText(msg);
-    		cmbUtente.getItems().clear(); //cancello quello che c'era prima perchè è riferito al grafo precedente: ESSENZIALEEE
-    		cmbUtente.getItems().addAll(model.getUsersWithReviews());	
-    	    btnUtenteSimile.setDisable(false);
-    		
+    		n = Integer.parseInt(txtN.getText());
     	}catch(NumberFormatException e) {
-    		e.printStackTrace();
-    		txtResult.setText("Inserire un numero valido!\n");
+    		txtResult.appendText("ERRORE: Inserire un numero valido minimo di precensioni pubblicate nel campo di testo!\n");
+    	    return;
+    	}
+    	Integer anno = cmbAnno.getValue();
+    	if(anno == null) {
+    		txtResult.appendText("ERRORE: Selezionare un anno dal menu a tendina!\n");
     		return;
     	}
+    	this.model.creaGrafo(n, anno);
+    	btnUtenteSimile.setDisable(false);
+    	cmbUtente.getItems().addAll(this.model.getVertici());
     	
+    	txtResult.appendText("Grafo creato!\n");
+    	txtResult.appendText("#VERTICI: "+ this.model.nVertici()+"\n");
+    	txtResult.appendText("#ARCHI: "+ this.model.nArchi()+"\n");
     	
     	
     }
 
     @FXML
     void doUtenteSimile(ActionEvent event) {
-
-    	//Dato un utente devo prendermi tutti gli adiacenti, i pesi degli archi
-    	//e vedere qual'è il peso maggiore e restituire una lista con tutti gli adiacenti
-    	//con quel peso
-    	
-    	//TODO controlli dei parametri di input
-    	//TODO stampare correttamente come da esempio su pdf il risultato
+    	txtResult.clear();
+    	btnSimula.setDisable(false);
     	User u = cmbUtente.getValue();
-    	
     	if(u == null) {
-    		txtResult.setText("Selezionare un utente dal menù a tendina, dopo aver creato il grafo.");
-    	    return;
+    		txtResult.appendText("ERRORE: Selezionare un utente dal menu a tendina!\n");
     	}
-    	List<User> vicini = model.utentiPiuSimili(u);
-    	
-    	txtResult.setText("Utenti piu vicini a " + u + ":\n");
-    	
-    	for(User u2: vicini) {
-    		txtResult.appendText(""+u2.toString()+"\n");
+    	List<UserSimiliarita> piuSimili = new ArrayList<>(this.model.getPiuSimili(u));
+    	txtResult.appendText("UTENTI PIU SIMILI A " + u + ":\n\n");
+    	for(UserSimiliarita userSim: piuSimili) {
+    		txtResult.appendText(userSim.getU() + "  GRADO:" + userSim.getGradoSimiliarita() + "\n");
     	}
-    	
-    	
     }
     
     @FXML
     void doSimula(ActionEvent event) {
+    	txtResult.clear();
+    	if(!model.grafoCreato()) {
+    		txtResult.appendText("ERRORE: crea prima il grafo selezionando un anno dal menù a tendina e inserendo un numero n di recensioni!\n");
+    	}
+    	int x1 = 0;
+    	int x2 = 0;
+    	try{
+    		x1 = Integer.parseInt(txtX1.getText());
+    	}catch(NumberFormatException e) {
+    		txtResult.appendText("ERRORE: inserire un numero intero valido!\n");
+    	}
+    	try{
+    		x2 = Integer.parseInt(txtX2.getText());
+    	}catch(NumberFormatException e) {
+    		txtResult.appendText("ERRORE: inserire un numero intero valido!\n");
+    	}
+    	if(x2 > this.model.getVertici().size()) {
+    		txtResult.appendText("ERRORE: inserire un numero intero minore di " + this.model.getVertici().size()+ "!\n");
+    	}
+    	this.model.simula(x1, x2);
+    	txtResult.appendText("Numero giorni necessari all'analisi: " + this.model.getNumGiorni() +"\n");
+    	txtResult.appendText("ANALISI:\n ");
+    	List<Intervistatore> intervistatori = new ArrayList<>(this.model.getIntervistatori());
 
+    	for(Intervistatore i: intervistatori) {
+    		txtResult.appendText("Intervistatore numero " + i.getId() + ", intervistati = " +i.getNumIntervistati() +"\n");
+    	}
     }
+    
     
 
     @FXML // This method is called by the FXMLLoader when initialization is complete
@@ -127,14 +143,16 @@ public class FXMLController {
         assert txtX1 != null : "fx:id=\"txtX1\" was not injected: check your FXML file 'Scene.fxml'.";
         assert txtResult != null : "fx:id=\"txtResult\" was not injected: check your FXML file 'Scene.fxml'.";
 
-        btnUtenteSimile.setDisable(true);
-        
-        for(int year=2005; year<= 2013; year++) {
-            cmbAnno.getItems().add(year);
+        for(int year = 2005; year <= 2013; year++) {
+        	cmbAnno.getItems().add(year);
         }
+      
     }
     
     public void setModel(Model model) {
     	this.model = model;
-    	 }
+    	btnUtenteSimile.setDisable(true);
+    	btnSimula.setDisable(true);
+    	
+    }
 }

@@ -2,45 +2,64 @@ package it.polito.tdp.yelp.model;
 
 public class Event implements Comparable<Event>{
 	
-	public enum EventType { //Tipi di eventi da simulare
-		DA_INTERVISTARE, //caso III rientra sempre qui
-		FERIE,
+	public enum EventType{
+		DA_INTERVISTARE,
+		FERIE
 	}
-	//Attributi dell'evento(indipendentemente dal tipo)
-	private int giorno ;
-	private EventType type ;
-	private User intervistato ;
-	private Giornalista giornalista ;
 	
-	public Event(int giorno, EventType type, User intervistato, Giornalista giornalista) {
+	private int giorno;
+	private EventType type;
+	private User user;
+	private Intervistatore i;
+	
+	public Event(int giorno, EventType type, User user, Intervistatore i) {
 		super();
 		this.giorno = giorno;
-		this.type = type ;
-		this.intervistato = intervistato;
-		this.giornalista = giornalista;
+		this.type = type;
+		this.user = user;
+		this.i = i;
 	}
 
-	//Creo i GETTER + ordino per data (giorno)     
 	public int getGiorno() {
 		return giorno;
+	}
+
+	public void setGiorno(int giorno) {
+		this.giorno = giorno;
 	}
 
 	public EventType getType() {
 		return type;
 	}
 
-	public User getIntervistato() {
-		return intervistato;
+	public void setType(EventType type) {
+		this.type = type;
 	}
 
-	public Giornalista getGiornalista() {
-		return giornalista;
+	
+	public User getUser() {
+		return user;
+	}
+
+	public void setUser(User user) {
+		this.user = user;
+	}
+
+	
+	
+	public Intervistatore getIntervistatore() {
+		return i;
+	}
+
+	public void setIntervistatore(Intervistatore i) {
+		this.i = i;
 	}
 
 	@Override
-	public int compareTo(Event other) {
-		return this.giorno - other.giorno; // ==0 se uguali, != 0 se diversi
+	public int compareTo(Event o) {
+		return this.giorno-o.giorno;
 	}
+	
 	
 
 }

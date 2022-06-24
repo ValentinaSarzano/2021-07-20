@@ -6,8 +6,7 @@ public class TestModel {
 		// TODO Auto-generated method stub
 
 		Model m = new Model();
-		String messaggio = m.creaGrafo(200, 2007);
-		System.out.println(messaggio);
+		
 	}
 
 }
